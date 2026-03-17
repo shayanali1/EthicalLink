@@ -3,41 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ethical Link — Loan Planner</title>
+    <meta http-equiv="Cache-Control" content="no-store">
+    <title>EthicalLink — Loan Planner</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 
-    <div class="container">
-        <h1>Ethical Link</h1>
-        <p class="subtitle">Loan & Installment Planner</p>
+    <header>
+        <div class="logo-icon">🧮</div>
+        <div class="header-text">
+            <h1>EthicalLink</h1>
+            <p>Islamic Loan & Installment Planner</p>
+        </div>
+    </header>
 
-        <form action="/calculate" method="POST">
+    <div class="main-grid">
 
-            <label>Principal Amount (PKR)</label>
-            <input type="number" name="principal" placeholder="e.g. 50000" required>
+        <!-- LEFT PANEL: Input Form -->
+        <div class="card">
+            <h2>Loan Details</h2>
 
-            <label>Repayment Duration (Months)</label>
-            <input type="number" name="duration" placeholder="e.g. 12" required>
+            <form action="/calculate" method="POST" id="loan-form">
 
-            <label>Administrative Service Charge (PKR)</label>
-            <input type="number" name="charge" placeholder="e.g. 500" required>
+                <label>Loan Amount (PKR)</label>
+                <input type="number" name="principal"
+                       placeholder="e.g. 50000"
+                       value="{{ request.form.get('principal', '') }}"
+                       required>
 
-            <label>Loan Type</label>
-            <select name="loan_type">
-                <option value="islamic">Islamic Interest-Free (Qard al-Hasan)</option>
-                <option value="standard">Standard Installment Plan</option>
-            </select>
+                <label>Duration (Months)</label>
+                <input type="number" name="duration"
+                       placeholder="e.g. 12"
+                       value="{{ request.form.get('duration', '') }}"
+                       required>
 
-            <div id="interest-row">
-                <label>Annual Interest Rate (%) — Standard Plan Only</label>
-                <input type="number" name="interest_rate" placeholder="e.g. 10" step="0.1">
+                <label>Fixed Service Charge (PKR)</label>
+                <input type="number" name="charge"
+                       placeholder="e.g. 500"
+                       value="{{ request.form.get('charge', '') }}"
+                       required>
+
+                <label>Loan Type</label>
+                <select name="loan_type" id="loan_type" onchange="toggleInterest()">
+                    <option value="islamic" {% if request.form.get('loan_type') == 'islamic' %}selected{% endif %}>
+                        Islamic Interest-Free (Qard al-Hasan)
+                    </option>
+                    <option value="standard" {% if request.form.get('loan_type') == 'standard' %}selected{% endif %}>
+                        Standard Installment Plan
+                    </option>
+                </select>
+
+                <div id="interest-row">
+                    <label>Annual Interest Rate (%)</label>
+                    <input type="number" name="interest_rate"
+                           placeholder="e.g. 10"
+                           step="0.1"
+                           value="{{ request.form.get('interest_rate', '') }}">
+                </div>
+
+                <button type="submit">Calculate Installments</button>
+                <button type="button" class="clear-btn" onclick="clearForm()">Clear Form</button>
+
+            </form>
+
+            {% if results %}
+            <div class="summary-box">
+                <h3>Summary</h3>
+                <div class="summary-row">
+                    <span>Total Loan Amount:</span>
+                    <span>PKR {{ results.principal }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Service Charge:</span>
+                    <span>PKR {{ results.charge }}</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total Payable:</span>
+                    <span class="green">PKR {{ results.total_payable }}</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Monthly Installment:</span>
+                    <span class="green">PKR {{ results.monthly_installment }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- RIGHT PANEL: Repayment Schedule -->
+        <div class="card">
+
+            <div class="schedule-header">
+                <h2>Repayment Schedule</h2>
+                {% if schedule %}
+                <button type="button" class="save-btn" onclick="saveCSV()">
+                    ⬇ Save as CSV
+                </button>
+                {% endif %}
             </div>
 
-            <button type="submit">Calculate Installment</button>
+            {% if schedule %}
+            <div class="schedule-table-wrapper">
+                <table id="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Principal Paid</th>
+                            <th>Monthly Installment</th>
+                            <th>Remaining Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in schedule %}
+                        <tr>
+                            <td>{{ row.month }}</td>
+                            <td>PKR {{ row.principal_paid }}</td>
+                            <td class="green">PKR {{ row.monthly_installment }}</td>
+                            <td>PKR {{ row.remaining_balance }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-        </form>
+            {% else %}
+            <div class="placeholder-box">
+                <div class="placeholder-icon">🧮</div>
+                <p>Enter loan details and click Calculate to view the repayment schedule</p>
+            </div>
+            {% endif %}
+
+        </div>
+
     </div>
+
+    <script>
+        function toggleInterest() {
+            var loanType = document.getElementById("loan_type").value;
+            var interestRow = document.getElementById("interest-row");
+            if (loanType === "islamic") {
+                interestRow.style.display = "none";
+            } else {
+                interestRow.style.display = "block";
+            }
+        }
+
+        function clearForm() {
+            document.getElementById("loan-form").reset();
+            toggleInterest();
+            window.location.href = "/";
+        }
+
+        function saveCSV() {
+            var table = document.getElementById("schedule-table");
+            if (!table) return;
+
+            var rows = table.querySelectorAll("tr");
+            var csv = [];
+
+            rows.forEach(function(row) {
+                var cols = row.querySelectorAll("th, td");
+                var rowData = [];
+                cols.forEach(function(col) {
+                    rowData.push('"' + col.innerText + '"');
+                });
+                csv.push(rowData.join(","));
+            });
+
+            var csvContent = csv.join("\n");
+            var blob = new Blob([csvContent], { type: "text/csv" });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = "EthicalLink_Schedule.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        toggleInterest();
+    </script>
 
 </body>
 </html>
