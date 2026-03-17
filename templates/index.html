@@ -1,17 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EthicalLink — Islamic Loan Planner</title>
+    <title>Ethical Link — Loan Planner</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 
     <div class="container">
-        <h1>EthicalLink</h1>
-        <p>Islamic Interest-Free Loan & Installment Planner</p>
+        <h1>Ethical Link</h1>
+        <p class="subtitle">Loan & Installment Planner</p>
+
+        <form action="/calculate" method="POST">
+
+            <label>Principal Amount (PKR)</label>
+            <input type="number" name="principal" placeholder="e.g. 50000" required>
+
+            <label>Repayment Duration (Months)</label>
+            <input type="number" name="duration" placeholder="e.g. 12" required>
+
+            <label>Administrative Service Charge (PKR)</label>
+            <input type="number" name="charge" placeholder="e.g. 500" required>
+
+            <label>Loan Type</label>
+            <select name="loan_type">
+                <option value="islamic">Islamic Interest-Free (Qard al-Hasan)</option>
+                <option value="standard">Standard Installment Plan</option>
+            </select>
+
+            <div id="interest-row">
+                <label>Annual Interest Rate (%) — Standard Plan Only</label>
+                <input type="number" name="interest_rate" placeholder="e.g. 10" step="0.1">
+            </div>
+
+            <button type="submit">Calculate Installment</button>
+
+        </form>
     </div>
 
 </body>

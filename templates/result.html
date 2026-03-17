@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EthicalLink — Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <h1>EthicalLink</h1>
+        <p class="subtitle">Your Installment Schedule</p>
+
+        <div class="result-box">
+
+            <div class="result-row">
+                <span>Loan Type</span>
+                <span>
+                    {% if loan_type == "islamic" %}
+                        Islamic Interest-Free (Qard al-Hasan)
+                    {% else %}
+                        Standard Installment Plan
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="result-row">
+                <span>Principal Amount</span>
+                <span>PKR {{ principal }}</span>
+            </div>
+
+            <div class="result-row">
+                <span>Repayment Duration</span>
+                <span>{{ duration }} Months</span>
+            </div>
+
+            <div class="result-row">
+                <span>Monthly Installment</span>
+                <span class="highlight">PKR {{ monthly_installment }}</span>
+            </div>
+
+            <div class="result-row">
+                <span>Total Payable</span>
+                <span>PKR {{ total_payable }}</span>
+            </div>
+
+            <div class="result-row">
+                <span>Total Interest Paid</span>
+                <span>PKR {{ interest_paid }}</span>
+            </div>
+
+        </div>
+
+        <a href="/" class="back-btn">Calculate Again</a>
+
+    </div>
+
+</body>
+</html>
