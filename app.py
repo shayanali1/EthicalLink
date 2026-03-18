@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 
 app = Flask(__name__)
-app.secret_key = "ethicallink_secret_key"
+app.secret_key = "Ethical Link_secret_key"
 
 @app.route("/", methods=["GET"])
 def home():
