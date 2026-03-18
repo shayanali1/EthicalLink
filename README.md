@@ -48,6 +48,12 @@ Ethical Link/
 ```
 
 ---
+## Live Demo
+
+🌐 [https://ethical-link.onrender.com](https://ethical-link.onrender.com)
+
+> Note: Please allow up to 60 seconds for the initial load as the app
+> is hosted on a free tier server that spins down during inactivity.
 
 ## How to Run Locally
 
@@ -113,6 +119,7 @@ Interest Paid = Total Payable - Principal
 [GitHub](https://github.com/shayanali1)
 
 ---
+
 
 ## License
 
