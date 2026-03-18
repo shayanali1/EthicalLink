@@ -1,203 +1,331 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-store">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-store" />
     <title>EthicalLink — Loan Planner</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
     <header>
-        <div class="logo-icon">🧮</div>
-        <div class="header-text">
-            <h1>EthicalLink</h1>
-            <p>Islamic Loan & Installment Planner</p>
-        </div>
+      <div class="logo-icon">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="4" y="2" width="16" height="20" rx="2" />
+          <line x1="8" y1="6" x2="16" y2="6" />
+          <line x1="8" y1="10" x2="10" y2="10" />
+          <line x1="12" y1="10" x2="14" y2="10" />
+          <line x1="16" y1="10" x2="16" y2="10" />
+          <line x1="8" y1="14" x2="10" y2="14" />
+          <line x1="12" y1="14" x2="14" y2="14" />
+          <line x1="16" y1="14" x2="16" y2="14" />
+          <line x1="8" y1="18" x2="10" y2="18" />
+          <line x1="12" y1="18" x2="14" y2="18" />
+          <line x1="16" y1="18" x2="16" y2="18" />
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>EthicalLink</h1>
+        <p>Loan & Installment Planner</p>
+      </div>
     </header>
 
     <div class="main-grid">
-
-        <!-- LEFT PANEL: Input Form -->
-        <div class="card">
-            <h2>Loan Details</h2>
-
-            <form action="/calculate" method="POST" id="loan-form">
-
-                <label>Loan Amount (PKR)</label>
-                <input type="number" name="principal"
-                       placeholder="e.g. 50000"
-                       value="{{ request.form.get('principal', '') }}"
-                       required>
-
-                <label>Duration (Months)</label>
-                <input type="number" name="duration"
-                       placeholder="e.g. 12"
-                       value="{{ request.form.get('duration', '') }}"
-                       required>
-
-                <label>Fixed Service Charge (PKR)</label>
-                <input type="number" name="charge"
-                       placeholder="e.g. 500"
-                       value="{{ request.form.get('charge', '') }}"
-                       required>
-
-                <label>Loan Type</label>
-                <select name="loan_type" id="loan_type" onchange="toggleInterest()">
-                    <option value="islamic" {% if request.form.get('loan_type') == 'islamic' %}selected{% endif %}>
-                        Islamic Interest-Free (Qard al-Hasan)
-                    </option>
-                    <option value="standard" {% if request.form.get('loan_type') == 'standard' %}selected{% endif %}>
-                        Standard Installment Plan
-                    </option>
-                </select>
-
-                <div id="interest-row">
-                    <label>Annual Interest Rate (%)</label>
-                    <input type="number" name="interest_rate"
-                           placeholder="e.g. 10"
-                           step="0.1"
-                           value="{{ request.form.get('interest_rate', '') }}">
-                </div>
-
-                <button type="submit">Calculate Installments</button>
-                <button type="button" class="clear-btn" onclick="clearForm()">Clear Form</button>
-
-            </form>
-
-            {% if results %}
-            <div class="summary-box">
-                <h3>Summary</h3>
-                <div class="summary-row">
-                    <span>Total Loan Amount:</span>
-                    <span>PKR {{ results.principal }}</span>
-                </div>
-                <div class="summary-row">
-                    <span>Service Charge:</span>
-                    <span>PKR {{ results.charge }}</span>
-                </div>
-                <div class="summary-row total">
-                    <span>Total Payable:</span>
-                    <span class="green">PKR {{ results.total_payable }}</span>
-                </div>
-                <div class="summary-row total">
-                    <span>Monthly Installment:</span>
-                    <span class="green">PKR {{ results.monthly_installment }}</span>
-                </div>
+      <!-- LEFT PANEL -->
+      <div class="card">
+        <h2>Loan Details</h2>
+        <form action="/calculate" method="POST" id="loan-form">
+          <div class="input-group">
+            <label>Loan Amount</label>
+            <div class="input-wrapper">
+              <span class="input-prefix">PKR</span>
+              <input
+                type="text"
+                name="principal"
+                placeholder="50,000"
+                oninput="formatInput(this)"
+                onfocus="unformatInput(this)"
+                onblur="finalizeInput(this)"
+                required
+              />
             </div>
-            {% endif %}
+          </div>
 
+          <div class="input-group">
+            <label>Duration (Months)</label>
+            <div class="input-wrapper">
+              <span class="input-prefix">MO</span>
+              <input
+                type="number"
+                name="duration"
+                id="duration-input"
+                placeholder="12"
+                min="1"
+                oninput="clearActivePill()"
+                required
+              />
+            </div>
+            <div class="duration-pills">
+              <div class="duration-pill" onclick="setDuration(3, this)">3</div>
+              <div class="duration-pill" onclick="setDuration(6, this)">6</div>
+              <div class="duration-pill" onclick="setDuration(12, this)">
+                12
+              </div>
+              <div class="duration-pill" onclick="setDuration(24, this)">
+                24
+              </div>
+              <div class="duration-pill" onclick="setDuration(36, this)">
+                36
+              </div>
+              <div class="duration-pill" onclick="setDuration(48, this)">
+                48
+              </div>
+              <div class="duration-pill" onclick="setDuration(60, this)">
+                60
+              </div>
+              <div class="duration-pill" onclick="setDuration(120, this)">
+                120
+              </div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Service Charge</label>
+            <div class="input-wrapper">
+              <span class="input-prefix">PKR</span>
+              <input
+                type="text"
+                name="charge"
+                placeholder="500"
+                oninput="formatInput(this)"
+                onfocus="unformatInput(this)"
+                onblur="finalizeInput(this)"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="loan-type-group">
+            <label>Loan Type</label>
+            <div class="loan-type-toggle">
+              <input
+                type="radio"
+                name="loan_type"
+                id="islamic"
+                value="islamic"
+                checked
+                onchange="toggleInterest()"
+              />
+              <label for="islamic">Islamic<br />Interest-Free</label>
+              <input
+                type="radio"
+                name="loan_type"
+                id="standard"
+                value="standard"
+                onchange="toggleInterest()"
+              />
+              <label for="standard">Standard<br />Installment</label>
+            </div>
+          </div>
+
+          <div id="interest-row">
+            <div class="input-group">
+              <label>Annual Interest Rate</label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  name="interest_rate"
+                  placeholder="10.0"
+                  step="0.1"
+                  min="0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-calculate">
+            Calculate Installments
+          </button>
+          <button type="button" class="btn-clear" onclick="clearForm()">
+            Clear Form
+          </button>
+        </form>
+
+        {% if results %}
+        <div class="summary-box">
+          <h3>Summary</h3>
+          <div class="summary-row">
+            <span>Loan Amount</span>
+            <span>PKR {{ results.principal }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Service Charge</span>
+            <span>PKR {{ results.charge }}</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total Payable</span>
+            <span class="green">PKR {{ results.total_payable }}</span>
+          </div>
+          <div class="summary-row total">
+            <span>Monthly Installment</span>
+            <span class="green">PKR {{ results.monthly_installment }}</span>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="card">
+        <div class="schedule-header">
+          <h2>Repayment Schedule</h2>
+          {% if schedule %}
+          <button class="btn-save" onclick="saveCSV()">⬇ Save CSV</button>
+          {% endif %}
         </div>
 
-        <!-- RIGHT PANEL: Repayment Schedule -->
-        <div class="card">
-
-            <div class="schedule-header">
-                <h2>Repayment Schedule</h2>
-                {% if schedule %}
-                <button type="button" class="save-btn" onclick="saveCSV()">
-                    ⬇ Save as CSV
-                </button>
-                {% endif %}
-            </div>
-
-            {% if schedule %}
-            <div class="schedule-table-wrapper">
-                <table id="schedule-table">
-                    <thead>
-                        <tr>
-                            <th>Month</th>
-                            <th>Principal Paid</th>
-                            <th>Monthly Installment</th>
-                            <th>Remaining Balance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in schedule %}
-                        <tr>
-                            <td>{{ row.month }}</td>
-                            <td>PKR {{ row.principal_paid }}</td>
-                            <td class="green">PKR {{ row.monthly_installment }}</td>
-                            <td>PKR {{ row.remaining_balance }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% else %}
-            <div class="placeholder-box">
-                <div class="logo-icon">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-         viewBox="0 0 24 24" fill="none" stroke="white"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2"/>
-        <line x1="8" y1="6" x2="16" y2="6"/>
-        <line x1="8" y1="10" x2="10" y2="10"/>
-        <line x1="12" y1="10" x2="14" y2="10"/>
-        <line x1="16" y1="10" x2="16" y2="10"/>
-        <line x1="8" y1="14" x2="10" y2="14"/>
-        <line x1="12" y1="14" x2="14" y2="14"/>
-        <line x1="16" y1="14" x2="16" y2="14"/>
-        <line x1="8" y1="18" x2="10" y2="18"/>
-        <line x1="12" y1="18" x2="14" y2="18"/>
-        <line x1="16" y1="18" x2="16" y2="18"/>
-    </svg>
-</div>
-                <p>Enter loan details and click Calculate to view the repayment schedule</p>
-            </div>
-            {% endif %}
-
+        {% if schedule %}
+        <div class="schedule-table-wrapper">
+          <table id="schedule-table">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Principal Paid</th>
+                <th>Monthly Installment</th>
+                <th>Remaining Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in schedule %}
+              <tr>
+                <td>{{ row.month }}</td>
+                <td>PKR {{ row.principal_paid }}</td>
+                <td class="green">PKR {{ row.monthly_installment }}</td>
+                <td>PKR {{ row.remaining_balance }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-
+        {% else %}
+        <div class="placeholder-box">
+          <div class="placeholder-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="4" y="2" width="16" height="20" rx="2" />
+              <line x1="8" y1="6" x2="16" y2="6" />
+              <line x1="8" y1="10" x2="10" y2="10" />
+              <line x1="12" y1="10" x2="14" y2="10" />
+              <line x1="16" y1="10" x2="16" y2="10" />
+              <line x1="8" y1="14" x2="10" y2="14" />
+              <line x1="12" y1="14" x2="14" y2="14" />
+              <line x1="16" y1="14" x2="16" y2="14" />
+              <line x1="8" y1="18" x2="10" y2="18" />
+              <line x1="12" y1="18" x2="14" y2="18" />
+              <line x1="16" y1="18" x2="16" y2="18" />
+            </svg>
+          </div>
+          <p>
+            Enter loan details and click Calculate to view the repayment
+            schedule
+          </p>
+        </div>
+        {% endif %}
+      </div>
     </div>
 
     <script>
-        function toggleInterest() {
-            var loanType = document.getElementById("loan_type").value;
-            var interestRow = document.getElementById("interest-row");
-            if (loanType === "islamic") {
-                interestRow.style.display = "none";
-            } else {
-                interestRow.style.display = "block";
-            }
-        }
+      function formatInput(input) {
+        var raw = input.value.replace(/[^0-9.]/g, "");
+        input.value = raw;
+        raw = raw.replace(/,/g, "");
+        if (raw === "" || isNaN(raw)) return;
+        var parts = raw.split(".");
+        parts[0] = parseInt(parts[0]).toLocaleString("en-US");
+        input.value = parts.join(".");
+      }
 
-        function clearForm() {
-            document.getElementById("loan-form").reset();
-            toggleInterest();
-            window.location.href = "/";
-        }
+      function unformatInput(input) {
+        input.value = input.value.replace(/,/g, "");
+      }
 
-        function saveCSV() {
-            var table = document.getElementById("schedule-table");
-            if (!table) return;
+      function finalizeInput(input) {
+        var raw = input.value.replace(/,/g, "");
+        if (raw === "" || isNaN(raw)) return;
+        var num = parseFloat(raw);
+        var parts = num.toFixed(2).split(".");
+        parts[0] = parseInt(parts[0]).toLocaleString("en-US");
+        input.value = parts.join(".");
+      }
 
-            var rows = table.querySelectorAll("tr");
-            var csv = [];
+      function setDuration(months, el) {
+        document.getElementById("duration-input").value = months;
+        document.querySelectorAll(".duration-pill").forEach(function (pill) {
+          pill.classList.remove("active");
+        });
+        el.classList.add("active");
+      }
 
-            rows.forEach(function(row) {
-                var cols = row.querySelectorAll("th, td");
-                var rowData = [];
-                cols.forEach(function(col) {
-                    rowData.push('"' + col.innerText + '"');
-                });
-                csv.push(rowData.join(","));
-            });
+      function toggleInterest() {
+        var isStandard = document.getElementById("standard").checked;
+        document.getElementById("interest-row").style.display = isStandard
+          ? "block"
+          : "none";
+      }
 
-            var csvContent = csv.join("\n");
-            var blob = new Blob([csvContent], { type: "text/csv" });
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement("a");
-            a.href = url;
-            a.download = "EthicalLink_Schedule.csv";
-            a.click();
-            URL.revokeObjectURL(url);
-        }
+      function clearForm() {
+        window.location.href = "/";
+      }
+      function clearActivePill() {
+    document.querySelectorAll(".duration-pill").forEach(function(pill) {
+        pill.classList.remove("active");
+    });
+}
 
-        toggleInterest();
+      function saveCSV() {
+        var table = document.getElementById("schedule-table");
+        if (!table) return;
+        var rows = table.querySelectorAll("tr");
+        var csv = [];
+        rows.forEach(function (row) {
+          var cols = row.querySelectorAll("th, td");
+          var rowData = [];
+          cols.forEach(function (col) {
+            rowData.push('"' + col.innerText + '"');
+          });
+          csv.push(rowData.join(","));
+        });
+        var blob = new Blob([csv.join("\n")], { type: "text/csv" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "EthicalLink_Schedule.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      toggleInterest();
     </script>
-
-</body>
+  </body>
 </html>

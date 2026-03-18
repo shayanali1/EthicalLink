@@ -11,9 +11,9 @@ def home():
 
 @app.route("/calculate", methods=["POST"])
 def calculate():
-    principal = float(request.form["principal"])
+    principal = float(request.form["principal"].replace(",", ""))
     duration = int(request.form["duration"])
-    charge = float(request.form["charge"])
+    charge = float(request.form["charge"].replace(",", ""))
     loan_type = request.form["loan_type"]
 
     if loan_type == "islamic":
